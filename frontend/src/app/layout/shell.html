@@ -1,0 +1,156 @@
+<a class="skip-link" href="#main-content">Skip to content</a>
+<div
+  class="app-shell"
+  [class.sidebar-collapsed]="collapsed() && !mobileOpen()"
+  [class.mobile-open]="mobileOpen()"
+>
+  @if (mobileOpen()) {
+  <button
+    class="sidebar-backdrop"
+    aria-label="Close navigation"
+    (click)="mobileOpen.set(false)"
+  ></button>
+  }
+  <aside class="sidebar" aria-label="Main navigation">
+    <a class="brand" routerLink="/dashboard" (click)="mobileOpen.set(false)">
+      <span class="brand-mark"
+        ><i class="pi pi-sparkles" aria-hidden="true"></i
+      ></span>
+      <span class="brand-text"
+        ><strong>Optimus Admin</strong
+        ><small>Your workspace, connected</small></span
+      >
+    </a>
+    <div class="workspace-switch">
+      <span class="workspace-icon">O</span
+      ><span class="nav-label"
+        ><strong>Optimus workspace</strong
+        ><small>Pro plan <span class="tiny-dot"></span></small></span
+      ><i class="pi pi-chevron-down nav-label" aria-hidden="true"></i>
+    </div>
+    <nav class="nav-groups">
+      @for (group of navigation; track group.label) {
+      <div class="nav-group">
+        <span class="nav-group-title">{{ group.label }}</span>
+        @for (item of group.items; track item.path) { @if (canView(item.path)) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}"
+          ariaCurrentWhenActive="page"
+          [attr.title]="collapsed() ? item.label : null"
+          (click)="mobileOpen.set(false)"
+        >
+          <i [class]="'pi pi-' + item.icon" aria-hidden="true"></i
+          ><span class="nav-label">{{ item.label }}</span> @if (item.path ===
+          '/chats') { <span class="nav-count nav-label">3</span> }
+        </a>
+        } }
+      </div>
+      }
+    </nav>
+    <div class="sidebar-note">
+      <span class="live-dot"></span
+      ><span class="nav-label"
+        >Made with Optimus UI <span class="version">v2</span></span
+      >
+    </div>
+    <button
+      class="sidebar-profile"
+      (click)="profileMenu.toggle($event)"
+      aria-label="Open account menu"
+    >
+      <p-avatar [label]="initials()" shape="circle" /><span class="nav-label"
+        ><strong>{{ auth.user()?.name }}</strong
+        ><small>{{ auth.user()?.email }}</small></span
+      ><i class="pi pi-ellipsis-v nav-label" aria-hidden="true"></i>
+    </button>
+  </aside>
+  <div class="main-shell">
+    <header class="topbar">
+      <p-button
+        icon="pi pi-bars"
+        [text]="true"
+        severity="secondary"
+        ariaLabel="Toggle sidebar"
+        (onClick)="toggleSidebar()"
+      />
+      <span class="topbar-divider"></span
+      ><span class="breadcrumb"
+        ><span class="breadcrumb-parent"
+          >Workspace <i class="pi pi-angle-right" aria-hidden="true"></i
+        ></span>
+        <strong>{{ currentPage() }}</strong></span
+      >
+      <div class="topbar-actions">
+        <button
+          class="search-trigger"
+          aria-label="Search pages"
+          (click)="searchOpen.set(true)"
+        >
+          <i class="pi pi-search" aria-hidden="true"></i
+          ><span>Search anything...</span><kbd>Ctrl K</kbd>
+        </button>
+        <p-button
+          [icon]="theme.dark() ? 'pi pi-sun' : 'pi pi-moon'"
+          [text]="true"
+          severity="secondary"
+          ariaLabel="Toggle color theme"
+          (onClick)="theme.toggle()"
+        />
+        <a
+          class="icon-link"
+          routerLink="/settings/appearance"
+          aria-label="Appearance settings"
+          ><i class="pi pi-sliders-h" aria-hidden="true"></i
+        ></a>
+        <button
+          class="avatar-button"
+          (click)="profileMenu.toggle($event)"
+          aria-label="Account menu"
+        >
+          <p-avatar [label]="initials()" shape="circle" />
+        </button>
+      </div>
+    </header>
+    <main id="main-content" tabindex="-1"><router-outlet /></main>
+    <footer class="app-footer">
+      <span>© {{ 2026 }} Optimus Admin</span
+      ><a
+        href="https://optimus.openng.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Built with Optimus UI
+        <i class="pi pi-arrow-up-right" aria-hidden="true"></i
+      ></a>
+    </footer>
+  </div>
+</div>
+<p-menu #profileMenu [model]="profileItems" [popup]="true" appendTo="body" />
+<app-feedback />
+<p-dialog
+  header="Go anywhere"
+  [(visible)]="searchOpen"
+  [modal]="true"
+  [style]="{width: '520px'}"
+  [draggable]="false"
+  [dismissableMask]="true"
+>
+  <input
+    pInputText
+    class="full-width"
+    aria-label="Search pages"
+    placeholder="Search pages..."
+    [(ngModel)]="query"
+  />
+  <div class="command-results">
+    @for (item of results(); track item.path) {
+    <a [routerLink]="item.path" (click)="searchOpen.set(false)"
+      ><i [class]="'pi pi-' + item.icon" aria-hidden="true"></i>{{ item.label
+      }}<i class="pi pi-arrow-up-right" aria-hidden="true"></i
+    ></a>
+    } @empty {
+    <p class="empty-state">No pages found. Try another search.</p>
+    }
+  </div>
+</p-dialog>

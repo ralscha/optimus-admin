@@ -1,0 +1,210 @@
+<div class="page-kicker">YOUR WORKSPACE AT A GLANCE</div>
+<app-page-header
+  [title]="title"
+  [description]="'Welcome back, ' + (auth.user()?.name?.split(' ')?.[0] ?? 'there') + '. Here’s what’s happening today.'"
+>
+  <span class="muted row" style="font-size: 11px"
+    ><i class="pi pi-calendar" aria-hidden="true"></i>{{ today | date:'MMM d, y'
+    }}</span
+  >
+  <a pButton href="/api/dashboard/export" download
+    ><i class="pi pi-download" aria-hidden="true"></i
+    ><span>Export report</span></a
+  >
+</app-page-header>
+<nav class="dashboard-tabs" aria-label="Dashboard views">
+  <a routerLink="/dashboard" routerLinkActive="active">Overview</a
+  ><a routerLink="/dashboard2" routerLinkActive="active">Business</a
+  ><a routerLink="/payment-dashboard" routerLinkActive="active">Payments</a>
+</nav>
+@if (dashboard.isLoading()) {
+<div class="metric-grid">
+  @for (item of [1,2,3,4]; track item) {
+  <p-skeleton height="170px" borderRadius="12px" /> }
+</div>
+<p-skeleton height="340px" borderRadius="12px" />
+} @else if (dashboard.error()) {
+<p-message severity="error"
+  >Couldn’t load your dashboard. Check that the Go API is running.</p-message
+><p-button label="Try again" (onClick)="dashboard.reload()" />
+} @else if (dashboard.value(); as data) {
+<div class="metric-grid">
+  <article class="metric">
+    <div class="metric-top">
+      <i class="pi pi-dollar" aria-hidden="true"></i
+      ><span class="growth-pill"
+        ><i class="pi pi-arrow-up-right" aria-hidden="true"></i>12.5%</span
+      >
+    </div>
+    <p class="metric-label">Total revenue</p>
+    <div class="metric-value">{{ data.revenue | currency }}</div>
+    <p class="metric-foot">Trending up this month <span>↗</span></p>
+  </article>
+  <article class="metric">
+    <div class="metric-top">
+      <i class="pi pi-user-plus" aria-hidden="true"></i
+      ><span class="growth-pill"
+        ><i class="pi pi-arrow-up-right" aria-hidden="true"></i>8.2%</span
+      >
+    </div>
+    <p class="metric-label">Subscriptions</p>
+    <div class="metric-value">{{ data.subscriptions | number }}</div>
+    <p class="metric-foot">Steady growth in your community</p>
+  </article>
+  <article class="metric">
+    <div class="metric-top">
+      <i class="pi pi-users" aria-hidden="true"></i
+      ><span class="growth-pill"
+        ><i class="pi pi-arrow-up-right" aria-hidden="true"></i>4.6%</span
+      >
+    </div>
+    <p class="metric-label">Active accounts</p>
+    <div class="metric-value">{{ data.activeUsers | number }}</div>
+    <p class="metric-foot">Strong engagement this month</p>
+  </article>
+  <article class="metric">
+    <div class="metric-top">
+      <i class="pi pi-chart-line" aria-hidden="true"></i
+      ><span class="growth-pill"
+        ><i class="pi pi-arrow-up-right" aria-hidden="true"></i>2.1%</span
+      >
+    </div>
+    <p class="metric-label">Conversion rate</p>
+    <div class="metric-value">{{ data.conversion }}%</div>
+    <p class="metric-foot">Above your monthly target</p>
+  </article>
+</div>
+<div class="stack">
+  <section class="panel" aria-label="Revenue chart">
+    <div class="panel-header">
+      <div>
+        <h2>Revenue overview</h2>
+        <p>
+          {{ revenueTotal() | currency:'USD':'symbol':'1.0-0' }} across the last
+          {{ months() }} months of sample data
+        </p>
+      </div>
+      <p-selectbutton
+        [options]="ranges"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="months"
+        [allowEmpty]="false"
+        ariaLabel="Revenue time range"
+      />
+    </div>
+    <div class="chart-container">
+      <p-chart
+        type="line"
+        [data]="chartData()"
+        [options]="chartOptions()"
+        height="245px"
+        ariaLabel="Monthly revenue, rising from 1,860 dollars in January to 5,630 dollars in December"
+      />
+    </div>
+    <div class="chart-footer">
+      <i class="pi pi-arrow-up-right" aria-hidden="true"></i
+      ><strong>Looking good.</strong> Revenue has grown 12.5% this month.<span
+        style="margin-left: auto"
+        >Jan – Dec 2026</span
+      >
+    </div>
+  </section>
+  @if (variant === 'business') {
+  <div class="metric-grid" style="margin-bottom: 0">
+    @for (channel of [{name:'Direct',share:42},{name:'Organic
+    search',share:31},{name:'Referrals',share:18},{name:'Social',share:9}];
+    track channel.name) {
+    <div class="panel panel-body">
+      <p class="muted">{{ channel.name }}</p>
+      <h2 style="margin-top: 8px">{{ channel.share }}% of traffic</h2>
+      <progress
+        [value]="channel.share"
+        max="100"
+        [attr.aria-label]="channel.name + ' share'"
+        style="width: 100%; accent-color: var(--accent); margin-top: 16px"
+      ></progress>
+    </div>
+    }
+  </div>
+  } @if (variant === 'payments') {
+  <div class="panel panel-body row spread">
+    <div>
+      <h2>Payment activity</h2>
+      <p class="muted" style="margin-top: 5px">
+        Review payment details, update a status, or export your transactions.
+      </p>
+    </div>
+    <a
+      pButton
+      routerLink="/payment-transactions"
+      severity="secondary"
+      [outlined]="true"
+      ><span>Manage transactions</span
+      ><i class="pi pi-arrow-right" aria-hidden="true"></i
+    ></a>
+  </div>
+  }
+  <section>
+    <div class="row spread" style="margin-bottom: 15px">
+      <div>
+        <h2>
+          Recent transactions
+          <span class="version">{{ data.transactions.length }}</span>
+        </h2>
+        <p class="muted" style="font-size: 12px; margin-top: 4px">
+          The latest activity across your business.
+        </p>
+      </div>
+      <a
+        pButton
+        routerLink="/payment-transactions"
+        [text]="true"
+        severity="secondary"
+        ><span>View all</span
+        ><i class="pi pi-arrow-right" aria-hidden="true"></i
+      ></a>
+    </div>
+    <div class="table-container">
+      <p-table [value]="data.transactions" [tableStyle]="{'min-width': '680px'}"
+        ><ng-template #header
+          ><tr>
+            <th>Customer</th>
+            <th>Status</th>
+            <th>Payment method</th>
+            <th>Date</th>
+            <th class="text-right">Amount</th>
+          </tr></ng-template
+        ><ng-template #body let-row
+          ><tr>
+            <td>
+              <div class="person-cell">
+                <p-avatar
+                  [label]="initials(row.customer)"
+                  shape="circle"
+                /><span
+                  ><strong>{{ row.customer }}</strong
+                  ><small>{{ row.email }}</small></span
+                >
+              </div>
+            </td>
+            <td><app-status-tag [value]="row.status" /></td>
+            <td>
+              <i
+                class="pi pi-credit-card muted"
+                aria-hidden="true"
+                style="margin-right: 7px"
+              ></i
+              >{{ row.gateway }}
+            </td>
+            <td class="muted">{{ row.createdAt | date:'MMM d, y' }}</td>
+            <td class="text-right" style="font-weight: 550">
+              {{ row.amount | currency }}
+            </td>
+          </tr></ng-template
+        ></p-table
+      >
+    </div>
+  </section>
+</div>
+}

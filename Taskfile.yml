@@ -1,0 +1,110 @@
+version: '3'
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds: [task --list]
+    silent: true
+  setup:
+    desc: Install dependencies
+    deps: [client:install, server:download]
+  dev:
+    desc: Start Angular on 4200 and the Go API on 8080
+    deps: [client:start, server:run]
+  preview:
+    desc: Build and serve the complete application on 8080
+    deps: [client:build]
+    dir: backend
+    env:
+      OPTIMUS_ADMIN_WEB_ROOT: ../frontend/dist/optimus-admin/browser
+    cmds: [go run ./cmd/server]
+  dogfood:
+    desc: Build and serve the complete application on 18080
+    deps: [client:build]
+    dir: backend
+    env:
+      OPTIMUS_ADMIN_ADDRESS: ':18080'
+      OPTIMUS_ADMIN_WEB_ROOT: ../frontend/dist/optimus-admin/browser
+    cmds: [go run ./cmd/server]
+  verify:
+    desc: Run lint, unit tests, production build, Go checks, and browser tests
+    cmds:
+      - task: client:lint
+      - task: client:test
+      - task: client:build
+      - task: server:test
+      - task: server:vet
+      - task: server:verify-modules
+      - task: client:e2e
+  build:
+    desc: Build the Angular app and Go binary
+    deps: [client:build, server:build]
+  client:install:
+    desc: Install the locked frontend dependencies
+    dir: frontend
+    cmds: [pnpm install --frozen-lockfile]
+  client:start:
+    desc: Start the Angular development server
+    dir: frontend
+    cmds: [pnpm start]
+  client:build:
+    desc: Build the production Angular app
+    dir: frontend
+    cmds: [pnpm run build]
+  client:lint:
+    desc: Run Angular and accessibility lint rules
+    dir: frontend
+    cmds: [pnpm run lint]
+  client:test:
+    desc: Run Angular unit tests
+    dir: frontend
+    cmds: [pnpm test]
+  client:e2e:
+    desc: Test the production app in Chromium (requires client build and browser install)
+    dir: frontend
+    cmds: [pnpm run test:e2e]
+  client:browsers:
+    desc: Install the Chromium browser for end-to-end tests
+    dir: frontend
+    cmds: [pnpm exec playwright install chromium]
+  server:download:
+    desc: Download Go modules
+    dir: backend
+    cmds: [go mod download]
+  server:run:
+    desc: Start the Go API
+    dir: backend
+    cmds: [go run ./cmd/server]
+  server:build:
+    desc: Build the Go server
+    dir: backend
+    cmds: ['go build -trimpath -o ./bin/optimus-admin{{exeExt}} ./cmd/server']
+  server:test:
+    desc: Run Go tests
+    dir: backend
+    cmds: [go test ./...]
+  server:vet:
+    desc: Run Go static analysis
+    dir: backend
+    cmds: [go vet ./...]
+  server:verify-modules:
+    desc: Verify Go modules
+    dir: backend
+    cmds: [go mod verify]
+  format:
+    desc: Format all source files
+    cmds:
+      - task: client:format
+      - task: server:format
+  client:format:
+    dir: frontend
+    cmds: [pnpm run format]
+  server:format:
+    dir: backend
+    cmds: [go fmt ./...]
+  docker:up:
+    desc: Build and start the combined container
+    cmds: [docker compose up --build -d]
+  docker:down:
+    desc: Stop the combined container
+    cmds: [docker compose down]

@@ -1,0 +1,12 @@
+node_modules/
+.angular/
+dist/
+.pnpm-store/
+.npm-cache/
+.cache/
+backend/bin/
+frontend/test-results/
+frontend/playwright-report/
+*.log
+.env
+.DS_Store
